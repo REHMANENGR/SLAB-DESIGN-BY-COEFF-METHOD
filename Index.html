@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Two-Way Slab Design — ACI Coefficient Method</title>
+<style>
+  :root{
+    --bg:#0f1720;
+    --bg2:#131c27;
+    --panel:#ffffff;
+    --panel-soft:#f4f6f8;
+    --ink:#1b232c;
+    --muted:#5c6b78;
+    --line:#dbe1e6;
+    --charcoal:#1a2530;
+    --charcoal2:#212e3b;
+    --teal:#0ea5b7;
+    --teal-dark:#0a7f8e;
+    --teal-glow:rgba(14,165,183,0.25);
+    --amber:#e2933a;
+    --amber-dark:#c9762a;
+    --green:#1f9d55;
+    --green-bg:#e5f7ec;
+    --red:#d64545;
+    --red-bg:#fdeaea;
+    --yellow-input:#fffbe8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', -apple-system, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(14,165,183,0.10), transparent 45%),
+      var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app-shell{ max-width:1440px; margin:0 auto; }
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    background:linear-gradient(160deg, var(--charcoal) 0%, var(--charcoal2) 60%, #16313a 130%);
+    color:#eaf2f4;
+    padding:24px 28px 20px;
+    position:relative;
+    overflow:hidden;
+    border-bottom:1px solid rgba(14,165,183,0.35);
+  }
+  header.top::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 34px);
+    pointer-events:none;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; position:relative; }
+  .brand .mark{
+    width:38px; height:38px; border-radius:9px;
+    background:linear-gradient(135deg, var(--teal), #0a5560);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; color:#04262b; font-size:16px;
+    box-shadow:0 0 0 4px rgba(14,165,183,0.15);
+  }
+  header.top h1{ margin:0; font-size:21px; font-weight:700; letter-spacing:0.2px; }
+  header.top .sub{ font-size:12.5px; color:#9db3bc; margin-top:3px; }
+  .unit-toggle{
+    position:relative;
+    margin-top:16px;
+    display:inline-flex;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;
+    padding:3px;
+    gap:2px;
+  }
+  .unit-toggle button{
+    border:none; background:transparent; color:#c7d6db;
+    padding:7px 16px; font-size:12.5px; font-weight:700; border-radius:6px; cursor:pointer;
+    letter-spacing:0.3px;
+  }
+  .unit-toggle button.active{ background:var(--teal); color:#04262b; }
+
+  /* ---------- LAYOUT ---------- */
+  .wrap{ padding:22px 22px 60px; display:grid; grid-template-columns: 1.15fr 0.85fr; gap:18px; align-items:start; }
+  @media (max-width:980px){ .wrap{ grid-template-columns:1fr; } }
+  .col{ display:flex; flex-direction:column; gap:16px; }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:0 6px 20px rgba(15,23,32,0.08);
+    overflow:hidden;
+  }
+  .card .card-head{
+    background:linear-gradient(90deg, var(--charcoal), #223140);
+    color:#eaf2f4;
+    padding:11px 16px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.4px;
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .card .card-head .pill{
+    font-size:10px; font-weight:700; background:rgba(14,165,183,0.2); color:#8fe3ec;
+    padding:3px 9px; border-radius:20px; text-transform:none; letter-spacing:0.2px;
+  }
+  .card .card-body{ padding:16px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; }
+  .field label{
+    display:block; font-size:10.5px; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.4px; margin-bottom:5px;
+  }
+  .field .unit-tag{ color:#9aa8b3; font-weight:600; text-transform:none; }
+  input, select{
+    width:100%;
+    padding:9px 10px;
+    font-size:13.5px;
+    border:1.5px solid var(--line);
+    border-radius:7px;
+    background:var(--yellow-input);
+    color:var(--ink);
+    font-family:inherit;
+  }
+  input:focus, select:focus{
+    outline:none; border-color:var(--teal);
+    box-shadow:0 0 0 3px var(--teal-glow);
+  }
+  select{ background:#fff; cursor:pointer; }
+  .advanced-toggle{
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+    font-size:12px; font-weight:700; color:var(--teal-dark);
+    margin-top:4px; user-select:none;
+  }
+  .advanced-toggle .chev{ transition:transform 0.15s ease; }
+  .advanced-toggle.open .chev{ transform:rotate(90deg); }
+  .advanced-body{ display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
+  .advanced-body.show{ display:block; }
+
+  .continuity-desc{
+    font-size:11.5px; color:var(--muted); background:var(--panel-soft);
+    border-left:3px solid var(--teal); padding:8px 10px; border-radius:6px; margin-top:8px;
+  }
+
+  button.btn{
+    border:none; border-radius:8px; padding:12px 20px; font-size:13.5px; font-weight:800;
+    letter-spacing:0.3px; cursor:pointer; text-transform:uppercase;
+    transition:transform 0.08s ease, box-shadow 0.15s ease;
+  }
+  button.btn-primary{ background:linear-gradient(135deg, var(--teal), var(--teal-dark)); color:#04262b; box-shadow:0 4px 14px var(--teal-glow); }
+  button.btn-primary:hover{ transform:translateY(-1px); box-shadow:0 6px 18px var(--teal-glow); }
+  button.btn-secondary{ background:var(--charcoal); color:#eaf2f4; }
+  button.btn-secondary:hover{ background:var(--charcoal2); }
+  .btnrow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+
+  /* ---------- SVG PANEL DIAGRAM ---------- */
+  .diagram-wrap{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .diagram-legend{ display:flex; gap:16px; font-size:11px; color:var(--muted); flex-wrap:wrap; justify-content:center; }
+  .diagram-legend span{ display:flex; align-items:center; gap:5px; }
+  .legend-line{ width:22px; height:0; border-top:3px solid var(--teal); display:inline-block; }
+  .legend-line.dashed{ border-top:3px dashed var(--amber); }
+
+  /* ---------- STATUS BADGES ---------- */
+  .badge{ display:inline-block; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:800; letter-spacing:0.3px; }
+  .badge-ok{ background:var(--green-bg); color:var(--green); }
+  .badge-fail{ background:var(--red-bg); color:var(--red); }
+  .badge-info{ background:#e7f0fb; color:#1d5fa8; }
+
+  /* ---------- RESULTS ---------- */
+  .result-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media (max-width:640px){ .result-grid{ grid-template-columns:1fr; } }
+  .rescard{
+    border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff;
+  }
+  .rescard .rh{
+    background:var(--panel-soft); padding:9px 12px; font-size:12px; font-weight:800;
+    color:var(--charcoal); display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid var(--line);
+  }
+  .rescard .rb{ padding:12px; font-size:12.5px; }
+  .rescard .row{ display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #eef1f3; }
+  .rescard .row:last-child{ border-bottom:none; }
+  .rescard .row .k{ color:var(--muted); }
+  .rescard .row .v{ font-weight:700; color:var(--ink); }
+  .barpick{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .barpick select{ width:auto; flex:0 0 90px; padding:6px 8px; font-size:12.5px; }
+  .callout-box{
+    margin-top:10px; background:linear-gradient(135deg,#eafcff,#e4f6f2); border:1px solid #bfe9ee;
+    border-radius:8px; padding:9px 11px; font-weight:800; color:var(--teal-dark); font-size:13.5px;
+    text-align:center;
+  }
+  .governs-note{ margin-top:6px; font-size:10.5px; color:var(--amber-dark); font-weight:700; text-align:center; }
+
+  .summary-table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .summary-table th, .summary-table td{ border:1px solid var(--line); padding:8px 9px; text-align:left; }
+  .summary-table th{ background:var(--charcoal); color:#eaf2f4; font-size:11px; text-transform:uppercase; }
+  .summary-table tr:nth-child(even){ background:var(--panel-soft); }
+
+  .notice{
+    font-size:11.5px; background:#fff6e6; border:1px solid var(--amber);
+    border-left:4px solid var(--amber); padding:9px 12px; border-radius:6px; color:#7a4c12;
+  }
+  .footer-note{
+    font-size:10.5px; color:#8b96a0; margin-top:16px; border-top:1px dashed var(--line);
+    padding-top:10px; line-height:1.5;
+  }
+  #resultsSection{ display:none; }
+  @media print{
+    body{ background:#fff; }
+    header.top{ background:var(--charcoal) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .no-print{ display:none !important; }
+    .wrap{ display:block; }
+    .card{ box-shadow:none; break-inside:avoid; margin-bottom:12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">S</div>
+    <div>
+      <h1>TWO-WAY SLAB DESIGN</h1>
+      <div class="sub">ACI 318 Coefficient Method (Method 3) &middot; 9 Continuity Cases &middot; Runs fully offline</div>
+    </div>
+  </div>
+  <div class="unit-toggle no-print">
+    <button id="unitUS" class="active" onclick="setUnits('US')">US &middot; kip-ft / in</button>
+    <button id="unitSI" onclick="setUnits('SI')">SI &middot; kN-m / mm</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- LEFT COLUMN: INPUTS -->
+  <div class="col">
+
+    <div class="card">
+      <div class="card-head">Project Information</div>
+      <div class="card-body">
+        <div class="grid">
+          <div class="field"><label>Project</label><input id="projName" type="text" placeholder="e.g. Residence"></div>
+          <div class="field"><label>Slab Title</label><input id="slabTitle" type="text" value="S1"></div>
+          <div class="field"><label>Designer</label><input id="designer" type="text"></div>
+          <div class="field"><label>Date</label><input id="theDate" type="date"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">Slab Geometry <span class="pill" id="slabActionPill">—</span></div>
+      <div class="card-body">
+        <div class="grid">
+          <div class="field"><label>Long Direction <span class="unit-tag">(Ly, <span class="u-len">ft</span>)</span></label><input id="Ly" type="number" step="any" value="20" oninput="updateDiagram()"></div>
+          <div class="field"><label>Short Direction <span class="unit-tag">(Lx, <span class="u-len">ft</span>)</span></label><input id="Lx" type="number" step="any" value="18" oninput="updateDiagram()"></div>
+          <div class="field"><label>b = Ly / Lx</label><input id="bRatio" type="text" readonly></div>
+          <div class="field"><label>m = Lx / Ly</label><input id="mRatio" type="text" readonly></div>
+        </div>
+
+        <div class="field" style="margin-top:12px;">
+          <label>Continuity Condition</label>
+          <select id="continuity" onchange="updateDiagram()">
+            <option value="FourEdgesDisc">Four Edges Discontinuous</option>
+            <option value="AllEdgesCont">All Edges Continuous</option>
+            <option value="TwoLongEdgesDisc">Two Long Edges Discontinuous</option>
+            <option value="TwoAdjEdgesDisc">Two Adjacent Edges Discontinuous</option>
+            <option value="TwoShortEdgesDisc">Two Short Edges Discontinuous</option>
+            <option value="OneLongEdgeCont">One Long Edge Continuous (only)</option>
+            <option value="OneShortEdgeCont">One Short Edge Continuous (only)</option>
+            <option value="OneLongEdgeDisc" selected>One Long Edge Discontinuous (only)</option>
+            <option value="OneShortEdgeDisc">One Short Edge Discontinuous (only)</option>
+          </select>
+          <div class="continuity-desc" id="continuityDesc">Panel is continuous on three edges; one long edge (an end of the long span) is discontinuous / unsupported by an adjacent panel.</div>
+        </div>
+
+        <div class="diagram-wrap" style="margin-top:14px;">
+          <div id="svgHolder"></div>
+          <div class="diagram-legend">
+            <span><span class="legend-line"></span> Continuous edge</span>
+            <span><span class="legend-line dashed"></span> Discontinuous edge</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">Materials, Thickness &amp; Loads</div>
+      <div class="card-body">
+        <div class="grid">
+          <div class="field"><label>f'c <span class="unit-tag u-fc">(psi)</span></label><input id="fc" type="number" step="any" value="2500"></div>
+          <div class="field"><label>fy <span class="unit-tag u-fy">(psi)</span></label><input id="fy" type="number" step="any" value="60000"></div>
+          <div class="field"><label>t Required <span class="unit-tag u-len2">(in)</span></label><input id="tReq" type="text" readonly></div>
+          <div class="field"><label>t Provided <span class="unit-tag u-len2">(in)</span></label><input id="tProv" type="number" step="any" value="6"></div>
+        </div>
+        <div class="grid" style="margin-top:12px;">
+          <div class="field"><label>Unit Wt. Concrete <span class="unit-tag u-uwc">(kcf)</span></label><input id="uwc" type="number" step="any" value="0.15"></div>
+          <div class="field"><label>Finishes / Fill / Partition <span class="unit-tag u-load">(ksf)</span></label><input id="wfn" type="number" step="any" value="0.036"></div>
+          <div class="field"><label>Live Load <span class="unit-tag u-load">(ksf)</span></label><input id="wl" type="number" step="any" value="0.04"></div>
+          <div class="field"><label>Dead Load, wD <span class="unit-tag u-load">(ksf)</span></label><input id="wdOut" type="text" readonly></div>
+        </div>
+
+        <div class="advanced-toggle no-print" onclick="toggleAdvanced()"><span class="chev">&#9656;</span> Advanced settings (load factors, cover, safety margin)</div>
+        <div class="advanced-body" id="advBody">
+          <div class="grid">
+            <div class="field"><label>Dead Load Factor</label><input id="dlFactor" type="number" step="0.05" value="1.2"></div>
+            <div class="field"><label>Live Load Factor</label><input id="llFactor" type="number" step="0.05" value="1.6"></div>
+            <div class="field"><label>Designer Safety Margin</label><input id="safetyMargin" type="number" step="0.05" value="0.1"></div>
+            <div class="field"><label>Clear Cover — Bottom <span class="unit-tag u-len2">(in)</span></label><input id="ccBot" type="number" step="any" value="1"></div>
+            <div class="field"><label>Clear Cover — Top <span class="unit-tag u-len2">(in)</span></label><input id="ccTop" type="number" step="any" value="1"></div>
+          </div>
+        </div>
+
+        <div class="btnrow no-print">
+          <button class="btn btn-primary" onclick="calculate()">Calculate Design</button>
+          <button class="btn btn-secondary" onclick="window.print()">Print Report</button>
+          <button class="btn btn-secondary" onclick="loadSample()">Load Sample</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN: RESULTS -->
+  <div class="col" id="resultsSection">
+
+    <div class="card">
+      <div class="card-head">Design Checks</div>
+      <div class="card-body" id="checksBody"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">Reinforcement Design <span class="pill">As = Mu / 3.9d</span></div>
+      <div class="card-body">
+        <div class="result-grid" id="resGrid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">Design Summary</div>
+      <div class="card-body">
+        <table class="summary-table" id="summaryTable"></table>
+        <div class="footer-note">
+          Method: ACI Coefficient Method (Method 3) for two-way slabs on stiff supports, m = Lx/Ly between 0.5 and 1.0, interpolated at 0.05 increments across 9 standard edge-continuity cases. For m &lt; 0.5 (b &gt; 2) the slab is designed as one-way. As values shown are the direct result of As = Mu / (3.9&middot;d); OK/FAIL checks additionally verify against &rho;min (0.0018 temp. &amp; shrinkage) and max spacing = 2t, same as the source workbook. Positive moments use separate dead-load and live-load coefficient tables (pattern-loading effect); negative moments use the combined factored load. For irregular panels, drop panels, or final construction documents, verify with a full finite-element / yield-line or direct-design-method analysis.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+<script>
+const SLAB_TABLES = 
+{"dead_pos":[{"short":{"FourEdgesDisc":0.036,"AllEdgesCont":0.018,"TwoLongEdgesDisc":0.018,"TwoAdjEdgesDisc":0.027,"TwoShortEdgesDisc":0.027,"OneLongEdgeCont":0.033,"OneShortEdgeCont":0.027,"OneLongEdgeDisc":0.02,"OneShortEdgeDisc":0.023},"long":{"FourEdgesDisc":0.036,"AllEdgesCont":0.018,"TwoLongEdgesDisc":0.027,"TwoAdjEdgesDisc":0.027,"TwoShortEdgesDisc":0.018,"OneLongEdgeCont":0.027,"OneShortEdgeCont":0.033,"OneLongEdgeDisc":0.023,"OneShortEdgeDisc":0.02}},{"short":{"FourEdgesDisc":0.04,"AllEdgesCont":0.02,"TwoLongEdgesDisc":0.021,"TwoAdjEdgesDisc":0.03,"TwoShortEdgesDisc":0.028,"OneLongEdgeCont":0.036,"OneShortEdgeCont":0.031,"OneLongEdgeDisc":0.022,"OneShortEdgeDisc":0.024},"long":{"FourEdgesDisc":0.033,"AllEdgesCont":0.016,"TwoLongEdgesDisc":0.025,"TwoAdjEdgesDisc":0.024,"TwoShortEdgesDisc":0.015,"OneLongEdgeCont":0.024,"OneShortEdgeCont":0.031,"OneLongEdgeDisc":0.021,"OneShortEdgeDisc":0.017}},{"short":{"FourEdgesDisc":0.045,"AllEdgesCont":0.022,"TwoLongEdgesDisc":0.025,"TwoAdjEdgesDisc":0.033,"TwoShortEdgesDisc":0.029,"OneLongEdgeCont":0.039,"OneShortEdgeCont":0.035,"OneLongEdgeDisc":0.025,"OneShortEdgeDisc":0.026},"long":{"FourEdgesDisc":0.029,"AllEdgesCont":0.014,"TwoLongEdgesDisc":0.024,"TwoAdjEdgesDisc":0.022,"TwoShortEdgesDisc":0.013,"OneLongEdgeCont":0.021,"OneShortEdgeCont":0.028,"OneLongEdgeDisc":0.019,"OneShortEdgeDisc":0.015}},{"short":{"FourEdgesDisc":0.05,"AllEdgesCont":0.024,"TwoLongEdgesDisc":0.029,"TwoAdjEdgesDisc":0.036,"TwoShortEdgesDisc":0.031,"OneLongEdgeCont":0.042,"OneShortEdgeCont":0.04,"OneLongEdgeDisc":0.029,"OneShortEdgeDisc":0.028},"long":{"FourEdgesDisc":0.026,"AllEdgesCont":0.012,"TwoLongEdgesDisc":0.022,"TwoAdjEdgesDisc":0.019,"TwoShortEdgesDisc":0.011,"OneLongEdgeCont":0.017,"OneShortEdgeCont":0.025,"OneLongEdgeDisc":0.017,"OneShortEdgeDisc":0.013}},{"short":{"FourEdgesDisc":0.056,"AllEdgesCont":0.026,"TwoLongEdgesDisc":0.034,"TwoAdjEdgesDisc":0.039,"TwoShortEdgesDisc":0.032,"OneLongEdgeCont":0.045,"OneShortEdgeCont":0.045,"OneLongEdgeDisc":0.032,"OneShortEdgeDisc":0.029},"long":{"FourEdgesDisc":0.023,"AllEdgesCont":0.011,"TwoLongEdgesDisc":0.02,"TwoAdjEdgesDisc":0.016,"TwoShortEdgesDisc":0.009,"OneLongEdgeCont":0.015,"OneShortEdgeCont":0.022,"OneLongEdgeDisc":0.015,"OneShortEdgeDisc":0.01}},{"short":{"FourEdgesDisc":0.061,"AllEdgesCont":0.028,"TwoLongEdgesDisc":0.04,"TwoAdjEdgesDisc":0.043,"TwoShortEdgesDisc":0.033,"OneLongEdgeCont":0.048,"OneShortEdgeCont":0.051,"OneLongEdgeDisc":0.036,"OneShortEdgeDisc":0.031},"long":{"FourEdgesDisc":0.019,"AllEdgesCont":0.009,"TwoLongEdgesDisc":0.018,"TwoAdjEdgesDisc":0.013,"TwoShortEdgesDisc":0.007,"OneLongEdgeCont":0.012,"OneShortEdgeCont":0.02,"OneLongEdgeDisc":0.013,"OneShortEdgeDisc":0.007}},{"short":{"FourEdgesDisc":0.068,"AllEdgesCont":0.03,"TwoLongEdgesDisc":0.046,"TwoAdjEdgesDisc":0.046,"TwoShortEdgesDisc":0.035,"OneLongEdgeCont":0.051,"OneShortEdgeCont":0.058,"OneLongEdgeDisc":0.04,"OneShortEdgeDisc":0.033},"long":{"FourEdgesDisc":0.016,"AllEdgesCont":0.007,"TwoLongEdgesDisc":0.016,"TwoAdjEdgesDisc":0.011,"TwoShortEdgesDisc":0.005,"OneLongEdgeCont":0.009,"OneShortEdgeCont":0.017,"OneLongEdgeDisc":0.011,"OneShortEdgeDisc":0.006}},{"short":{"FourEdgesDisc":0.074,"AllEdgesCont":0.032,"TwoLongEdgesDisc":0.054,"TwoAdjEdgesDisc":0.05,"TwoShortEdgesDisc":0.036,"OneLongEdgeCont":0.054,"OneShortEdgeCont":0.065,"OneLongEdgeDisc":0.044,"OneShortEdgeDisc":0.034},"long":{"FourEdgesDisc":0.013,"AllEdgesCont":0.006,"TwoLongEdgesDisc":0.014,"TwoAdjEdgesDisc":0.009,"TwoShortEdgesDisc":0.004,"OneLongEdgeCont":0.007,"OneShortEdgeCont":0.014,"OneLongEdgeDisc":0.009,"OneShortEdgeDisc":0.005}},{"short":{"FourEdgesDisc":0.081,"AllEdgesCont":0.034,"TwoLongEdgesDisc":0.062,"TwoAdjEdgesDisc":0.053,"TwoShortEdgesDisc":0.037,"OneLongEdgeCont":0.056,"OneShortEdgeCont":0.073,"OneLongEdgeDisc":0.048,"OneShortEdgeDisc":0.036},"long":{"FourEdgesDisc":0.01,"AllEdgesCont":0.004,"TwoLongEdgesDisc":0.011,"TwoAdjEdgesDisc":0.007,"TwoShortEdgesDisc":0.003,"OneLongEdgeCont":0.006,"OneShortEdgeCont":0.012,"OneLongEdgeDisc":0.007,"OneShortEdgeDisc":0.004}},{"short":{"FourEdgesDisc":0.088,"AllEdgesCont":0.035,"TwoLongEdgesDisc":0.071,"TwoAdjEdgesDisc":0.056,"TwoShortEdgesDisc":0.038,"OneLongEdgeCont":0.058,"OneShortEdgeCont":0.081,"OneLongEdgeDisc":0.052,"OneShortEdgeDisc":0.037},"long":{"FourEdgesDisc":0.008,"AllEdgesCont":0.003,"TwoLongEdgesDisc":0.009,"TwoAdjEdgesDisc":0.005,"TwoShortEdgesDisc":0.002,"OneLongEdgeCont":0.004,"OneShortEdgeCont":0.009,"OneLongEdgeDisc":0.005,"OneShortEdgeDisc":0.003}},{"short":{"FourEdgesDisc":0.095,"AllEdgesCont":0.037,"TwoLongEdgesDisc":0.08,"TwoAdjEdgesDisc":0.059,"TwoShortEdgesDisc":0.039,"OneLongEdgeCont":0.061,"OneShortEdgeCont":0.089,"OneLongEdgeDisc":0.056,"OneShortEdgeDisc":0.038},"long":{"FourEdgesDisc":0.006,"AllEdgesCont":0.002,"TwoLongEdgesDisc":0.007,"TwoAdjEdgesDisc":0.004,"TwoShortEdgesDisc":0.001,"OneLongEdgeCont":0.003,"OneShortEdgeCont":0.007,"OneLongEdgeDisc":0.004,"OneShortEdgeDisc":0.002}}],"live_pos":[{"short":{"FourEdgesDisc":0.036,"AllEdgesCont":0.027,"TwoLongEdgesDisc":0.027,"TwoAdjEdgesDisc":0.032,"TwoShortEdgesDisc":0.032,"OneLongEdgeCont":0.035,"OneShortEdgeCont":0.032,"OneLongEdgeDisc":0.028,"OneShortEdgeDisc":0.03},"long":{"FourEdgesDisc":0.036,"AllEdgesCont":0.027,"TwoLongEdgesDisc":0.032,"TwoAdjEdgesDisc":0.032,"TwoShortEdgesDisc":0.027,"OneLongEdgeCont":0.032,"OneShortEdgeCont":0.035,"OneLongEdgeDisc":0.03,"OneShortEdgeDisc":0.028}},{"short":{"FourEdgesDisc":0.04,"AllEdgesCont":0.03,"TwoLongEdgesDisc":0.031,"TwoAdjEdgesDisc":0.035,"TwoShortEdgesDisc":0.034,"OneLongEdgeCont":0.038,"OneShortEdgeCont":0.036,"OneLongEdgeDisc":0.031,"OneShortEdgeDisc":0.032},"long":{"FourEdgesDisc":0.033,"AllEdgesCont":0.025,"TwoLongEdgesDisc":0.029,"TwoAdjEdgesDisc":0.029,"TwoShortEdgesDisc":0.024,"OneLongEdgeCont":0.029,"OneShortEdgeCont":0.032,"OneLongEdgeDisc":0.027,"OneShortEdgeDisc":0.025}},{"short":{"FourEdgesDisc":0.045,"AllEdgesCont":0.034,"TwoLongEdgesDisc":0.035,"TwoAdjEdgesDisc":0.039,"TwoShortEdgesDisc":0.037,"OneLongEdgeCont":0.042,"OneShortEdgeCont":0.04,"OneLongEdgeDisc":0.035,"OneShortEdgeDisc":0.036},"long":{"FourEdgesDisc":0.029,"AllEdgesCont":0.022,"TwoLongEdgesDisc":0.027,"TwoAdjEdgesDisc":0.026,"TwoShortEdgesDisc":0.021,"OneLongEdgeCont":0.025,"OneShortEdgeCont":0.029,"OneLongEdgeDisc":0.024,"OneShortEdgeDisc":0.022}},{"short":{"FourEdgesDisc":0.05,"AllEdgesCont":0.037,"TwoLongEdgesDisc":0.04,"TwoAdjEdgesDisc":0.043,"TwoShortEdgesDisc":0.041,"OneLongEdgeCont":0.046,"OneShortEdgeCont":0.045,"OneLongEdgeDisc":0.04,"OneShortEdgeDisc":0.039},"long":{"FourEdgesDisc":0.026,"AllEdgesCont":0.019,"TwoLongEdgesDisc":0.024,"TwoAdjEdgesDisc":0.023,"TwoShortEdgesDisc":0.019,"OneLongEdgeCont":0.022,"OneShortEdgeCont":0.026,"OneLongEdgeDisc":0.022,"OneShortEdgeDisc":0.02}},{"short":{"FourEdgesDisc":0.056,"AllEdgesCont":0.041,"TwoLongEdgesDisc":0.045,"TwoAdjEdgesDisc":0.048,"TwoShortEdgesDisc":0.044,"OneLongEdgeCont":0.051,"OneShortEdgeCont":0.051,"OneLongEdgeDisc":0.044,"OneShortEdgeDisc":0.042},"long":{"FourEdgesDisc":0.023,"AllEdgesCont":0.017,"TwoLongEdgesDisc":0.022,"TwoAdjEdgesDisc":0.02,"TwoShortEdgesDisc":0.016,"OneLongEdgeCont":0.019,"OneShortEdgeCont":0.023,"OneLongEdgeDisc":0.019,"OneShortEdgeDisc":0.017}},{"short":{"FourEdgesDisc":0.061,"AllEdgesCont":0.045,"TwoLongEdgesDisc":0.051,"TwoAdjEdgesDisc":0.052,"TwoShortEdgesDisc":0.047,"OneLongEdgeCont":0.055,"OneShortEdgeCont":0.056,"OneLongEdgeDisc":0.049,"OneShortEdgeDisc":0.046},"long":{"FourEdgesDisc":0.019,"AllEdgesCont":0.014,"TwoLongEdgesDisc":0.019,"TwoAdjEdgesDisc":0.016,"TwoShortEdgesDisc":0.013,"OneLongEdgeCont":0.016,"OneShortEdgeCont":0.02,"OneLongEdgeDisc":0.016,"OneShortEdgeDisc":0.013}},{"short":{"FourEdgesDisc":0.068,"AllEdgesCont":0.049,"TwoLongEdgesDisc":0.057,"TwoAdjEdgesDisc":0.057,"TwoShortEdgesDisc":0.051,"OneLongEdgeCont":0.06,"OneShortEdgeCont":0.063,"OneLongEdgeDisc":0.054,"OneShortEdgeDisc":0.05},"long":{"FourEdgesDisc":0.016,"AllEdgesCont":0.012,"TwoLongEdgesDisc":0.016,"TwoAdjEdgesDisc":0.014,"TwoShortEdgesDisc":0.011,"OneLongEdgeCont":0.013,"OneShortEdgeCont":0.017,"OneLongEdgeDisc":0.014,"OneShortEdgeDisc":0.011}},{"short":{"FourEdgesDisc":0.074,"AllEdgesCont":0.053,"TwoLongEdgesDisc":0.064,"TwoAdjEdgesDisc":0.062,"TwoShortEdgesDisc":0.055,"OneLongEdgeCont":0.064,"OneShortEdgeCont":0.07,"OneLongEdgeDisc":0.059,"OneShortEdgeDisc":0.054},"long":{"FourEdgesDisc":0.013,"AllEdgesCont":0.01,"TwoLongEdgesDisc":0.014,"TwoAdjEdgesDisc":0.011,"TwoShortEdgesDisc":0.009,"OneLongEdgeCont":0.01,"OneShortEdgeCont":0.014,"OneLongEdgeDisc":0.011,"OneShortEdgeDisc":0.009}},{"short":{"FourEdgesDisc":0.081,"AllEdgesCont":0.058,"TwoLongEdgesDisc":0.071,"TwoAdjEdgesDisc":0.067,"TwoShortEdgesDisc":0.059,"OneLongEdgeCont":0.068,"OneShortEdgeCont":0.077,"OneLongEdgeDisc":0.065,"OneShortEdgeDisc":0.059},"long":{"FourEdgesDisc":0.01,"AllEdgesCont":0.007,"TwoLongEdgesDisc":0.011,"TwoAdjEdgesDisc":0.009,"TwoShortEdgesDisc":0.007,"OneLongEdgeCont":0.008,"OneShortEdgeCont":0.011,"OneLongEdgeDisc":0.009,"OneShortEdgeDisc":0.007}},{"short":{"FourEdgesDisc":0.088,"AllEdgesCont":0.062,"TwoLongEdgesDisc":0.08,"TwoAdjEdgesDisc":0.072,"TwoShortEdgesDisc":0.063,"OneLongEdgeCont":0.073,"OneShortEdgeCont":0.085,"OneLongEdgeDisc":0.07,"OneShortEdgeDisc":0.063},"long":{"FourEdgesDisc":0.008,"AllEdgesCont":0.006,"TwoLongEdgesDisc":0.009,"TwoAdjEdgesDisc":0.007,"TwoShortEdgesDisc":0.005,"OneLongEdgeCont":0.006,"OneShortEdgeCont":0.009,"OneLongEdgeDisc":0.007,"OneShortEdgeDisc":0.006}},{"short":{"FourEdgesDisc":0.095,"AllEdgesCont":0.066,"TwoLongEdgesDisc":0.088,"TwoAdjEdgesDisc":0.077,"TwoShortEdgesDisc":0.067,"OneLongEdgeCont":0.078,"OneShortEdgeCont":0.092,"OneLongEdgeDisc":0.076,"OneShortEdgeDisc":0.067},"long":{"FourEdgesDisc":0.006,"AllEdgesCont":0.004,"TwoLongEdgesDisc":0.007,"TwoAdjEdgesDisc":0.005,"TwoShortEdgesDisc":0.004,"OneLongEdgeCont":0.005,"OneShortEdgeCont":0.007,"OneLongEdgeDisc":0.005,"OneShortEdgeDisc":0.004}}],"neg":[{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.045,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.05,"TwoShortEdgesDisc":0.075,"OneLongEdgeCont":0.071,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.033,"OneShortEdgeDisc":0.061},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.045,"TwoLongEdgesDisc":0.076,"TwoAdjEdgesDisc":0.05,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.071,"OneLongEdgeDisc":0.061,"OneShortEdgeDisc":0.033}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.05,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.055,"TwoShortEdgesDisc":0.079,"OneLongEdgeCont":0.075,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.038,"OneShortEdgeDisc":0.065},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.041,"TwoLongEdgesDisc":0.072,"TwoAdjEdgesDisc":0.045,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.067,"OneLongEdgeDisc":0.056,"OneShortEdgeDisc":0.029}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.055,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.06,"TwoShortEdgesDisc":0.08,"OneLongEdgeCont":0.079,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.043,"OneShortEdgeDisc":0.068},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.037,"TwoLongEdgesDisc":0.07,"TwoAdjEdgesDisc":0.04,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.062,"OneLongEdgeDisc":0.052,"OneShortEdgeDisc":0.025}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.06,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.066,"TwoShortEdgesDisc":0.082,"OneLongEdgeCont":0.083,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.049,"OneShortEdgeDisc":0.072},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.031,"TwoLongEdgesDisc":0.065,"TwoAdjEdgesDisc":0.034,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.057,"OneLongEdgeDisc":0.046,"OneShortEdgeDisc":0.021}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.065,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.071,"TwoShortEdgesDisc":0.083,"OneLongEdgeCont":0.086,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.055,"OneShortEdgeDisc":0.075},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.027,"TwoLongEdgesDisc":0.061,"TwoAdjEdgesDisc":0.029,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.051,"OneLongEdgeDisc":0.041,"OneShortEdgeDisc":0.017}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.069,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.076,"TwoShortEdgesDisc":0.085,"OneLongEdgeCont":0.088,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.061,"OneShortEdgeDisc":0.078},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.022,"TwoLongEdgesDisc":0.056,"TwoAdjEdgesDisc":0.024,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.044,"OneLongEdgeDisc":0.036,"OneShortEdgeDisc":0.014}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.074,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.081,"TwoShortEdgesDisc":0.086,"OneLongEdgeCont":0.091,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.068,"OneShortEdgeDisc":0.081},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.017,"TwoLongEdgesDisc":0.05,"TwoAdjEdgesDisc":0.019,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.038,"OneLongEdgeDisc":0.029,"OneShortEdgeDisc":0.011}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.077,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.085,"TwoShortEdgesDisc":0.087,"OneLongEdgeCont":0.093,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.074,"OneShortEdgeDisc":0.083},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.014,"TwoLongEdgesDisc":0.043,"TwoAdjEdgesDisc":0.015,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.031,"OneLongEdgeDisc":0.024,"OneShortEdgeDisc":0.008}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.081,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.089,"TwoShortEdgesDisc":0.088,"OneLongEdgeCont":0.095,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.08,"OneShortEdgeDisc":0.085},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.01,"TwoLongEdgesDisc":0.035,"TwoAdjEdgesDisc":0.011,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.024,"OneLongEdgeDisc":0.018,"OneShortEdgeDisc":0.006}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.084,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.092,"TwoShortEdgesDisc":0.089,"OneLongEdgeCont":0.096,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.085,"OneShortEdgeDisc":0.086},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.007,"TwoLongEdgesDisc":0.028,"TwoAdjEdgesDisc":0.008,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.019,"OneLongEdgeDisc":0.014,"OneShortEdgeDisc":0.005}},{"short":{"FourEdgesDisc":0,"AllEdgesCont":0.086,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.094,"TwoShortEdgesDisc":0.09,"OneLongEdgeCont":0.097,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.089,"OneShortEdgeDisc":0.088},"long":{"FourEdgesDisc":0,"AllEdgesCont":0.006,"TwoLongEdgesDisc":0.022,"TwoAdjEdgesDisc":0.006,"TwoShortEdgesDisc":0,"OneLongEdgeCont":0,"OneShortEdgeCont":0.014,"OneLongEdgeDisc":0.01,"OneShortEdgeDisc":0.003}}],"pow_fallback":{"FourEdgesDisc":0.125,"AllEdgesCont":0.0625,"TwoLongEdgesDisc":0.125,"TwoAdjEdgesDisc":0.09090909090909091,"TwoShortEdgesDisc":0.0625,"OneLongEdgeCont":0.09090909090909091,"OneShortEdgeCont":0.125,"OneLongEdgeDisc":0.09090909090909091,"OneShortEdgeDisc":0.0625},"now_fallback":{"FourEdgesDisc":0,"AllEdgesCont":0.09090909090909091,"TwoLongEdgesDisc":0,"TwoAdjEdgesDisc":0.1111111111111111,"TwoShortEdgesDisc":0.09090909090909091,"OneLongEdgeCont":0.1111111111111111,"OneShortEdgeCont":0,"OneLongEdgeDisc":0.1111111111111111,"OneShortEdgeDisc":0.09090909090909091},"owtc":{"FourEdgesDisc":0.05,"AllEdgesCont":0.03571428571428571,"TwoLongEdgesDisc":0.05,"TwoAdjEdgesDisc":0.041666666666666664,"TwoShortEdgesDisc":0.03571428571428571,"OneLongEdgeCont":0.041666666666666664,"OneShortEdgeCont":0.05,"OneLongEdgeDisc":0.041666666666666664,"OneShortEdgeDisc":0.03571428571428571},"cases":["FourEdgesDisc","AllEdgesCont","TwoLongEdgesDisc","TwoAdjEdgesDisc","TwoShortEdgesDisc","OneLongEdgeCont","OneShortEdgeCont","OneLongEdgeDisc","OneShortEdgeDisc"]}
+;
+
+const CASE_LABELS = {
+  FourEdgesDisc:"Four Edges Discontinuous",
+  AllEdgesCont:"All Edges Continuous",
+  TwoLongEdgesDisc:"Two Long Edges Discontinuous",
+  TwoAdjEdgesDisc:"Two Adjacent Edges Discontinuous",
+  TwoShortEdgesDisc:"Two Short Edges Discontinuous",
+  OneLongEdgeCont:"One Long Edge Continuous (only)",
+  OneShortEdgeCont:"One Short Edge Continuous (only)",
+  OneLongEdgeDisc:"One Long Edge Discontinuous (only)",
+  OneShortEdgeDisc:"One Short Edge Discontinuous (only)"
+};
+const CASE_DESC = {
+  FourEdgesDisc:"Isolated panel — all four edges unsupported by adjacent panels (simply supported, no negative moment anywhere).",
+  AllEdgesCont:"True interior panel — continuous with an adjacent panel on all four sides.",
+  TwoLongEdgesDisc:"The two long edges (ends of the long span) are discontinuous; both short edges are continuous.",
+  TwoAdjEdgesDisc:"A corner panel — one long edge and one short edge (adjacent to each other) are discontinuous.",
+  TwoShortEdgesDisc:"The two short edges (ends of the short span) are discontinuous; both long edges are continuous.",
+  OneLongEdgeCont:"Only one long edge is continuous; the other three edges are discontinuous.",
+  OneShortEdgeCont:"Only one short edge is continuous; the other three edges are discontinuous.",
+  OneLongEdgeDisc:"Panel is continuous on three edges; one long edge (an end of the long span) is discontinuous / unsupported by an adjacent panel.",
+  OneShortEdgeDisc:"Panel is continuous on three edges; one short edge (an end of the short span) is discontinuous / unsupported by an adjacent panel."
+};
+// edge state: [top(long), right(short), bottom(long), left(short)] true = continuous
+const CASE_EDGES = {
+  FourEdgesDisc:      [false,false,false,false],
+  AllEdgesCont:       [true, true, true, true],
+  TwoLongEdgesDisc:   [false,true, false,true],
+  TwoAdjEdgesDisc:    [false,false,true, true],
+  TwoShortEdgesDisc:  [true, false,true, false],
+  OneLongEdgeCont:    [true, false,false,false],
+  OneShortEdgeCont:   [false,true, false,false],
+  OneLongEdgeDisc:    [false,true, true, true],
+  OneShortEdgeDisc:   [true, false,true, true]
+};
+
+let UNITS = 'US';
+function setUnits(u){
+  UNITS = u;
+  document.getElementById('unitUS').classList.toggle('active', u==='US');
+  document.getElementById('unitSI').classList.toggle('active', u==='SI');
+  const lenLabels = document.querySelectorAll('.u-len'); const len2 = document.querySelectorAll('.u-len2');
+  const fcL=document.querySelectorAll('.u-fc'); const fyL=document.querySelectorAll('.u-fy');
+  const uwcL=document.querySelectorAll('.u-uwc'); const loadL=document.querySelectorAll('.u-load');
+  if(u==='US'){
+    lenLabels.forEach(e=>e.textContent='ft'); len2.forEach(e=>e.textContent='in');
+    fcL.forEach(e=>e.textContent='(psi)'); fyL.forEach(e=>e.textContent='(psi)');
+    uwcL.forEach(e=>e.textContent='(kcf)'); loadL.forEach(e=>e.textContent='(ksf)');
+    document.getElementById('Ly').value=20; document.getElementById('Lx').value=18;
+    document.getElementById('fc').value=2500; document.getElementById('fy').value=60000;
+    document.getElementById('tProv').value=6; document.getElementById('uwc').value=0.15;
+    document.getElementById('wfn').value=0.036; document.getElementById('wl').value=0.04;
+    document.getElementById('ccBot').value=1; document.getElementById('ccTop').value=1;
+  } else {
+    lenLabels.forEach(e=>e.textContent='m'); len2.forEach(e=>e.textContent='mm');
+    fcL.forEach(e=>e.textContent='(MPa)'); fyL.forEach(e=>e.textContent='(MPa)');
+    uwcL.forEach(e=>e.textContent='(kN/m³)'); loadL.forEach(e=>e.textContent='(kN/m²)');
+    document.getElementById('Ly').value=6; document.getElementById('Lx').value=5.5;
+    document.getElementById('fc').value=21; document.getElementById('fy').value=420;
+    document.getElementById('tProv').value=150; document.getElementById('uwc').value=23.6;
+    document.getElementById('wfn').value=1.5; document.getElementById('wl').value=2.0;
+    document.getElementById('ccBot').value=25; document.getElementById('ccTop').value=25;
+  }
+  updateDiagram();
+}
+
+function toggleAdvanced(){
+  const b = document.getElementById('advBody');
+  const t = document.querySelector('.advanced-toggle');
+  b.classList.toggle('show');
+  t.classList.toggle('open');
+}
+
+// ---------- SVG panel diagram ----------
+function updateDiagram(){
+  const Ly = parseFloat(document.getElementById('Ly').value)||1;
+  const Lx = parseFloat(document.getElementById('Lx').value)||1;
+  const caseKey = document.getElementById('continuity').value;
+  document.getElementById('continuityDesc').textContent = CASE_DESC[caseKey];
+
+  const b = Ly/Lx;
+  document.getElementById('bRatio').value = isFinite(b)?b.toFixed(3):'';
+  document.getElementById('mRatio').value = isFinite(1/b)?(Lx/Ly).toFixed(3):'';
+
+  const W = 260, H = 220, pad = 44;
+  let boxW, boxH;
+  if(Ly>=Lx){ boxW = Math.max(60, W-2*pad) ; boxH = boxW*(Lx/Ly); if(boxH>H-2*pad){ boxH=H-2*pad; boxW=boxH*(Ly/Lx);} }
+  else { boxH = Math.max(60, H-2*pad); boxW = boxH*(Ly/Lx); }
+  const x0 = (W-boxW)/2, y0=(H-boxH)/2;
+  const edges = CASE_EDGES[caseKey]; // top,right,bottom,left  -> top/bottom = LONG edges, left/right = SHORT edges
+  function edgeStyle(cont){ return cont ? `stroke="#0ea5b7" stroke-width="4"` : `stroke="#e2933a" stroke-width="3" stroke-dasharray="7,5"`; }
+
+  const svg = `
+  <svg viewBox="0 0 ${W} ${H}" width="260" height="220" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${x0}" y="${y0}" width="${boxW}" height="${boxH}" fill="#eafcff" fill-opacity="0.6"/>
+    <line x1="${x0}" y1="${y0}" x2="${x0+boxW}" y2="${y0}" ${edgeStyle(edges[0])}/>
+    <line x1="${x0+boxW}" y1="${y0}" x2="${x0+boxW}" y2="${y0+boxH}" ${edgeStyle(edges[1])}/>
+    <line x1="${x0}" y1="${y0+boxH}" x2="${x0+boxW}" y2="${y0+boxH}" ${edgeStyle(edges[2])}/>
+    <line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0+boxH}" ${edgeStyle(edges[3])}/>
+    <text x="${W/2}" y="${y0-10}" text-anchor="middle" font-size="11" fill="#5c6b78" font-weight="700">Long edge (Ly span end)</text>
+    <text x="${W/2}" y="${y0+boxH+22}" text-anchor="middle" font-size="11" fill="#5c6b78" font-weight="700">Long edge (Ly span end)</text>
+    <text x="${x0-8}" y="${y0+boxH/2}" text-anchor="middle" font-size="11" fill="#5c6b78" font-weight="700" transform="rotate(-90 ${x0-8} ${y0+boxH/2})">Short edge</text>
+    <text x="${x0+boxW+8}" y="${y0+boxH/2}" text-anchor="middle" font-size="11" fill="#5c6b78" font-weight="700" transform="rotate(90 ${x0+boxW+8} ${y0+boxH/2})">Short edge</text>
+    <text x="${W/2}" y="${y0+boxH/2-6}" text-anchor="middle" font-size="12" fill="#1b232c" font-weight="800">Lx = ${Lx}</text>
+    <text x="${W/2}" y="${y0+boxH/2+12}" text-anchor="middle" font-size="12" fill="#1b232c" font-weight="800">Ly = ${Ly}</text>
+  </svg>`;
+  document.getElementById('svgHolder').innerHTML = svg;
+}
+
+// ---------- Coefficient interpolation ----------
+function roundTo(x,n){ const p=Math.pow(10,n); return Math.round(x*p)/p; }
+function mToIndex(mm){ return Math.round((1-mm)/0.05); }
+function getCoeff(table, m, caseKey, dirKey){
+  m = Math.max(0.5, Math.min(1, m));
+  let upperM = roundTo(Math.ceil(roundTo(m/0.05,6) - 1e-9)*0.05, 2);
+  let lowerM = roundTo(Math.floor(roundTo(m/0.05,6) + 1e-9)*0.05, 2);
+  if(upperM>1) upperM=1;
+  if(lowerM<0.5) lowerM=0.5;
+  const upperVal = table[mToIndex(upperM)][dirKey][caseKey];
+  const lowerVal = table[mToIndex(lowerM)][dirKey][caseKey];
+  if(upperVal-lowerVal===0) return upperVal;
+  return roundTo(((upperVal-lowerVal)/(upperM-lowerM))*(m-upperM)+upperVal,4);
+}
+
+function toggleAdv(){}
+
+function designSteel(Mu, d, FC, FY, SM, RM, lcf, T){
+  // Mu in (kip-ft or kN-m) per unit strip width; returns {AsCalc, ok, err}
+  const arg = 1-(Mu*1000/(d*d)/(0.3825*FC));
+  if(arg<0){ return {AsCalc:NaN, error:true}; }
+  const AsCalc = (0.85*FC/FY)*(1-Math.sqrt(arg))*(lcf*d);
+  return {AsCalc, error:false};
+}
+
+function pickSpacing(AsCalc, barNo, SM, RM, T, lcf){
+  const dia = barNo/8;
+  const Creq = Math.max((1+SM)*AsCalc, RM);
+  const rawSpacing = Math.floor((dia*dia*Math.PI*lcf/4)/Creq);
+  const maxSpacing = Math.floor(2*T);
+  const spacing = Math.min(rawSpacing, maxSpacing);
+  const AsProv = roundTo((dia*dia*Math.PI/4*lcf/spacing),3);
+  let governs = "";
+  if(AsCalc < RM) governs = "0.0018·Ag (min. temp/shrinkage steel) governs";
+  else if(spacing < rawSpacing) governs = "Max spacing (2t) governs";
+  return {dia, rawSpacing, maxSpacing, spacing, AsProv, governs};
+}
+
+function calculate(){
+  const Ly = parseFloat(document.getElementById('Ly').value)||0;
+  const Lx = parseFloat(document.getElementById('Lx').value)||0;
+  const caseKey = document.getElementById('continuity').value;
+  const FC = parseFloat(document.getElementById('fc').value)||0;
+  const FY = parseFloat(document.getElementById('fy').value)||0;
+  const T = parseFloat(document.getElementById('tProv').value)||0;
+  const UWC = parseFloat(document.getElementById('uwc').value)||0;
+  const WFN = parseFloat(document.getElementById('wfn').value)||0;
+  const WL = parseFloat(document.getElementById('wl').value)||0;
+  const DLF = parseFloat(document.getElementById('dlFactor').value)||1.2;
+  const LLF = parseFloat(document.getElementById('llFactor').value)||1.6;
+  const SM = parseFloat(document.getElementById('safetyMargin').value)||0;
+  const CC = parseFloat(document.getElementById('ccBot').value)||0;
+  const CCT = parseFloat(document.getElementById('ccTop').value)||0;
+
+  const lcf = (UNITS==='US') ? 12 : 1000;
+  const checksBody = document.getElementById('checksBody');
+
+  if(Lx<=0 || Ly<=0){ checksBody.innerHTML = '<div class="badge badge-fail">Enter both slab dimensions</div>'; document.getElementById('resultsSection').style.display='flex'; return; }
+  if(Ly < Lx){ checksBody.innerHTML = '<div class="badge badge-fail">Error: Long Direction (Ly) must be ≥ Short Direction (Lx)</div>'; document.getElementById('resultsSection').style.display='flex'; return; }
+
+  const B = Ly/Lx;
+  const LXY = Lx/Ly; // m
+  const SA = (B>2) ? 'One Way' : 'Two Way';
+
+  // ---- Thickness required ----
+  let TR;
+  if(B>2){
+    const OWTC = SLAB_TABLES.owtc[caseKey];
+    TR = Lx*OWTC*lcf*(0.4+FY/100000);
+  } else {
+    if(UNITS==='US'){
+      TR = Math.max(Ly*(0.8+FY/200000)/(36+9*B)*lcf, 3.5);
+    } else {
+      TR = Math.max(Ly*(0.8+FY/1380)/(36+9*B)*lcf, 90);
+    }
+  }
+
+  // ---- Loads ----
+  const WD = UWC*T/lcf + WFN;
+  const WDU = DLF*WD;
+  const WLU = LLF*WL;
+  const W = WDU + WLU;
+
+  // ---- Moment coefficients ----
+  let DPSF,LPSF,DPLF,LPLF,TNSF,TNLF;
+  if(B>2){
+    const POW = SLAB_TABLES.pow_fallback[caseKey];
+    const NOW = SLAB_TABLES.now_fallback[caseKey];
+    DPSF=null; // not used; handled directly below
+    var MuPosShort = W*POW*Lx*Lx;
+    var MuPosLong = 0;
+    var MuNegShort = W*NOW*Lx*Lx;
+    var MuNegLong = 0;
+  } else {
+    DPSF = getCoeff(SLAB_TABLES.dead_pos, LXY, caseKey, 'short');
+    LPSF = getCoeff(SLAB_TABLES.live_pos, LXY, caseKey, 'short');
+    DPLF = getCoeff(SLAB_TABLES.dead_pos, LXY, caseKey, 'long');
+    LPLF = getCoeff(SLAB_TABLES.live_pos, LXY, caseKey, 'long');
+    TNSF = getCoeff(SLAB_TABLES.neg, LXY, caseKey, 'short');
+    TNLF = getCoeff(SLAB_TABLES.neg, LXY, caseKey, 'long');
+    var MuPosShort = (WDU*DPSF + WLU*LPSF)*Lx*Lx;
+    var MuPosLong = (WDU*DPLF + WLU*LPLF)*Ly*Ly;
+    var MuNegShort = (W*TNSF)*Lx*Lx;
+    var MuNegLong = (W*TNLF)*Ly*Ly;
+  }
+
+  const RM = 0.0018*T*lcf;
+
+  // ---- Checks summary ----
+  const depthOK = T>=TR;
+  document.getElementById('tReq').value = TR.toFixed(3);
+  document.getElementById('wdOut').value = WD.toFixed(4);
+  document.getElementById('slabActionPill').textContent = SA;
+
+  let checksHtml = `
+    <div class="rescard" style="margin-bottom:10px;">
+      <div class="rh">Slab Action <span class="badge badge-info">${SA}</span></div>
+      <div class="rb">
+        <div class="row"><span class="k">b = Ly/Lx</span><span class="v">${B.toFixed(3)}</span></div>
+        <div class="row"><span class="k">m = Lx/Ly</span><span class="v">${LXY.toFixed(3)}</span></div>
+      </div>
+    </div>
+    <div class="rescard" style="margin-bottom:10px;">
+      <div class="rh">Thickness Check <span class="badge ${depthOK?'badge-ok':'badge-fail'}">${depthOK?'OK':'FAIL'}</span></div>
+      <div class="rb">
+        <div class="row"><span class="k">t required</span><span class="v">${TR.toFixed(3)}</span></div>
+        <div class="row"><span class="k">t provided</span><span class="v">${T.toFixed(3)}</span></div>
+        ${!depthOK?`<div class="governs-note" style="text-align:left;">Increase slab thickness — provided t is less than required.</div>`:''}
+      </div>
+    </div>
+    <div class="rescard">
+      <div class="rh">Factored Loads</div>
+      <div class="rb">
+        <div class="row"><span class="k">wD (dead)</span><span class="v">${WD.toFixed(4)}</span></div>
+        <div class="row"><span class="k">${DLF}×wD</span><span class="v">${WDU.toFixed(4)}</span></div>
+        <div class="row"><span class="k">${LLF}×wL</span><span class="v">${WLU.toFixed(4)}</span></div>
+        <div class="row"><span class="k">Total factored, wu</span><span class="v">${W.toFixed(4)}</span></div>
+      </div>
+    </div>
+  `;
+  checksBody.innerHTML = checksHtml;
+
+  // ---- Reinforcement locations ----
+  const locations = [
+    {key:'shortBot', label:'Short Direction — Bottom', Mu:MuPosShort, dExpr:(barN)=> T-CC-(barN/8/2), defBar:3},
+    {key:'longBot',  label:'Long Direction — Bottom',  Mu:MuPosLong,  dExpr:(barN,barShortN)=> T-CC-(barShortN/8)-(barN/8/2), defBar:3},
+    {key:'shortTop', label:'Short Direction — Top',    Mu:MuNegShort, dExpr:(barN)=> T-CCT-(barN/8/2), defBar:3},
+    {key:'longTop',  label:'Long Direction — Top',     Mu:MuNegLong,  dExpr:(barN)=> T-CCT-(barN/8/2), defBar:3}
+  ];
+
+  window.__slabState = {locations, T, CC, CCT, SM, RM, lcf, FC, FY, W, WDU, WLU};
+  renderResults();
+
+  document.getElementById('resultsSection').style.display='flex';
+  document.getElementById('resultsSection').scrollIntoView({behavior:'smooth'});
+}
+
+function renderResults(){
+  const st = window.__slabState;
+  if(!st) return;
+  const grid = document.getElementById('resGrid');
+  grid.innerHTML='';
+  const summaryRows = [];
+
+  st.locations.forEach(loc=>{
+    const barSel = document.getElementById('bar_'+loc.key);
+    const barNo = barSel ? parseInt(barSel.value) : loc.defBar;
+    const shortBotBar = document.getElementById('bar_shortBot') ? parseInt(document.getElementById('bar_shortBot').value) : 3;
+    const d = (loc.key==='longBot') ? loc.dExpr(barNo, shortBotBar) : loc.dExpr(barNo);
+
+    let block;
+    if(d<=0){
+      block = {AsCalc:NaN, error:true};
+    } else {
+      block = designSteel(loc.Mu, d, st.FC, st.FY, st.SM, st.RM, st.lcf, st.T);
+    }
+
+    let bodyHtml = `<div class="row"><span class="k">Mu</span><span class="v">${loc.Mu.toFixed(3)}</span></div>`;
+    bodyHtml += `<div class="row"><span class="k">Effective depth, d</span><span class="v">${d.toFixed(3)}</span></div>`;
+
+    let calloutText = '—', governsText='', asCalcText='0.000';
+    if(block.error){
+      bodyHtml += `<div class="row"><span class="k">As required</span><span class="v" style="color:var(--red)">Section too thin</span></div>`;
+      calloutText = 'INCREASE THICKNESS';
+    } else {
+      asCalcText = block.AsCalc.toFixed(3);
+      bodyHtml += `<div class="row"><span class="k">As = Mu / 3.9d</span><span class="v">${asCalcText}</span></div>`;
+      const sp = pickSpacing(block.AsCalc, barNo, st.SM, st.RM, st.T, st.lcf);
+      bodyHtml += `<div class="row"><span class="k">As provided</span><span class="v">${sp.AsProv}</span></div>`;
+      calloutText = `#${barNo} @ ${sp.spacing} ${UNITS==='US'?'in':'mm'} c/c`;
+      governsText = sp.governs;
+      summaryRows.push({label:loc.label, callout:calloutText, asProv:sp.AsProv, governs:governsText});
+    }
+
+    const card = document.createElement('div');
+    card.className='rescard';
+    card.innerHTML = `
+      <div class="rh">${loc.label}</div>
+      <div class="rb">
+        ${bodyHtml}
+        <div class="barpick no-print">
+          <label style="font-size:11px;color:var(--muted);font-weight:700;">Bar size</label>
+          <select id="bar_${loc.key}" onchange="renderResults()">
+            ${[3,4,5,6,7,8,9,10,11].map(n=>`<option value="${n}" ${n===barNo?'selected':''}>#${n}</option>`).join('')}
+          </select>
+        </div>
+        <div class="callout-box">${calloutText}</div>
+        ${governsText?`<div class="governs-note">${governsText}</div>`:''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  const table = document.getElementById('summaryTable');
+  let html = `<tr><th>Location</th><th>Reinforcement</th><th>As Provided</th><th>Notes</th></tr>`;
+  summaryRows.forEach(r=>{
+    html += `<tr><td>${r.label}</td><td>${r.callout}</td><td>${r.asProv} ${UNITS==='US'?'in²/ft':'mm²/m'}</td><td>${r.governs||'—'}</td></tr>`;
+  });
+  table.innerHTML = html;
+}
+
+function loadSample(){
+  setUnits('US');
+  document.getElementById('Ly').value=20;
+  document.getElementById('Lx').value=18;
+  document.getElementById('continuity').value='OneLongEdgeDisc';
+  document.getElementById('fc').value=2500;
+  document.getElementById('fy').value=60000;
+  document.getElementById('tProv').value=6;
+  updateDiagram();
+  calculate();
+}
+
+updateDiagram();
+</script>
+</body>
+</html>
